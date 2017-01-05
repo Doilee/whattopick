@@ -11,9 +11,6 @@
 |
 */
 
-Route::get('/', function () {
+Route::get('/', 'HomeController@index');
 
-    $champions = (new \App\Http\Controllers\ApiController())->getAllChampions();
-
-    dd($champions);
-});
+Route::post('/result', 'ResultController@index');

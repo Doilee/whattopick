@@ -22,7 +22,7 @@
             }
 
             .full-height {
-                height: 100vh;
+                height: 50vh;
             }
 
             .flex-center {
@@ -79,15 +79,26 @@
 
             <div class="content">
                 <div class="title m-b-md">
-                    Laravel
+                    What To Pick?
                 </div>
-
-                <div class="links">
-                    <a href="https://laravel.com/docs">Documentation</a>
-                    <a href="https://laracasts.com">Laracasts</a>
-                    <a href="https://laravel-news.com">News</a>
-                    <a href="https://forge.laravel.com">Forge</a>
-                    <a href="https://github.com/laravel/laravel">GitHub</a>
+                <div class="container">
+                    <div class="col-md-8 col-md-offset-2">
+                        <form method="POST" action="{{ url('/result') }}">
+                            @for($i = 1; $i <= 10; $i++)
+                                <div class="form-group" class="col-md-6 pull-left">
+                                    <label for="{{ $i }}">Pick number <b>{{ $i }}</b>:</label>
+                                    <select name="{{ $i }}" class="form-control">
+                                            <option value="unknown" selected>Unknown</option>
+                                            <option value="me">Me</option>
+                                        @foreach($champions as $champion)
+                                            <option value="{{ $champion->id }}">{{ $champion->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            @endfor
+                            <button type="submit">Submit</button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
