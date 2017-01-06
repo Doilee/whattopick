@@ -63,6 +63,9 @@
                 margin-bottom: 30px;
             }
         </style>
+
+        <!-- Latest compiled and minified Bootstrap -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     </head>
     <body>
         <div class="flex-center position-ref full-height">
@@ -82,21 +85,40 @@
                     What To Pick?
                 </div>
                 <div class="container">
-                    <div class="col-md-8 col-md-offset-2">
+                    <div class="row">
                         <form method="POST" action="{{ url('/result') }}">
-                            @for($i = 1; $i <= 10; $i++)
-                                <div class="form-group" class="col-md-6 pull-left">
-                                    <label for="{{ $i }}">Pick number <b>{{ $i }}</b>:</label>
-                                    <select name="{{ $i }}" class="form-control">
+                            <div class="col-md-6">
+                                @for($i = 1; $i <= 5; $i++)
+                                    <div class="form-group">
+                                        <label for="ally-{{ $i }}"><strong>Ally</strong> pick number <b>{{ $i }}</b>:</label>
+                                        <select name="ally-{{ $i }}">
                                             <option value="unknown" selected>Unknown</option>
                                             <option value="me">Me</option>
-                                        @foreach($champions as $champion)
-                                            <option value="{{ $champion->id }}">{{ $champion->name }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            @endfor
-                            <button type="submit">Submit</button>
+                                            @foreach($champions as $champion)
+                                                <option value="{{ $champion->id }}">{{ $champion->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                @endfor
+                            </div>
+                            <div class="col-md-6">
+                                @for($i = 1; $i <= 5; $i++)
+                                    <div class="form-group">
+                                        <label for="enemy-{{ $i }}"><strong>Enemy</strong> pick number <b>{{ $i }}</b>:</label>
+                                        <select name="enemy-{{ $i }}">
+                                            <option value="unknown" selected>Unknown</option>
+                                            <option value="me">Me</option>
+                                            @foreach($champions as $champion)
+                                                <option value="{{ $champion->id }}">{{ $champion->name }}</option>
+                                            @endforeach
+                                        </select>
+                                        <div class="radio">
+                                            <label><input type="radio" name="jungler" value="{{ $i }}">Jungler?</label>
+                                        </div>
+                                    </div>
+                                @endfor
+                            </div>
+                            <button type="submit" class="btn btn-success">Submit</button>
                         </form>
                     </div>
                 </div>

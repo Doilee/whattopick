@@ -12,9 +12,7 @@ class HomeController extends Controller
 
     public function index()
     {
-        $champions = (new ApiController())->getAllChampions();
-
         return view('welcome')
-            ->with('champions', Champion::all());
+            ->with('champions', Champion::all()->sortBy('name'));
     }
 }
