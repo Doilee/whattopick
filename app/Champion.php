@@ -8,10 +8,12 @@ class Champion extends Model
 {
     protected $table = 'champions';
 
+    protected $primaryKey = 'id';
+
     public $incrementing = false;
 
     public function jungler()
     {
-        return $this->hasOne(Champion::class);
+        return $this->hasOne(Jungler::class, 'champion_id');
     }
 }

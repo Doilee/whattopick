@@ -16,39 +16,43 @@ class ResultController extends Controller
         2, 3, 6, 7, 10
     ];
 
+    const COUNT_JUNGLERS = 2;
+
     protected $enemyJungler;
 
     public function index(Request $request)
     {
         $picks = $request->toArray();
 
-
         // todo: add enemy jungler option
         foreach ($picks as $key => $pick)
         {
-            if ($pick === 'unknown' OR $pick === 'me')
+            if ($pick === '' OR $pick === 'me')
             {
                 continue;
             }
 
             if (str_contains($key, 'ally'))
             {
-                $allyLaners[] = Champion::find($pick);
+                $allies[] = Champion::find($pick);
             }
             else
             {
                 if ($key === 'jungler')
                 {
-                    $this->enemyJungler = Champion::find($pick)->jungler();
+                    $enemyKey = $pick - 1;
+                    $this->enemyJungler = $enemies[$enemyKey]->jungler;
+                    unset($enemies[$enemyKey]);
                 }
                 else
                 {
-                    $enemyLaners[] = Champion::find($pick);
+                    $enemies[] = Champion::find($pick);
                 }
             }
         }
 
-        $scoreList = $this->calculation($allyLaners, $enemyLaners);
+
+        $scoreList = $this->calculation($allies, $enemies);
 
         $scoreList = collect($scoreList)->sortByDesc('score');
 
@@ -57,43 +61,64 @@ class ResultController extends Controller
     }
 
     /**
-     * @param $allyLaners
-     * @param $enemyLaners
+     * @param $allies
+     * @param $enemies
      */
-    private function calculation($allyLaners = array(), $enemyLaners = array())
+    private function calculation($allies = array(), $enemies = array())
     {
         $scoreList = [];
 
         foreach (Jungler::all() as $jungler) {
 
-            // default todo: should change later
-            $allyGankabilityMultiplier = 0;
-            $enemyGankabilityMultiplier = 0;
+            // default
+            $allyGankabilityTotal = 0;
+            $enemyGankabilityTotal = 0;
 
-            foreach ($allyLaners as $ally)
+            // Multiplier defaults
+            $vsEnemyJunglePassivityMultiplier = 1;
+            $vsEnemyJungleActivityMultiplier = 1;
+            $vsEnemyJunglePredatoryMultiplier = 1;
+
+            //todo: this calculation should be fine, but test it
+            if (!empty($this->enemyJungler))
             {
-                $allyGankabilityMultiplier += ($ally->pre_6_gankability ?? 2) / 4;
+
+                // activity beats passivity
+                // passivity beats predatory
+                // predatory beats activity
+                $vsEnemyJunglePassivityMultiplier += 0.5 * ($jungler->pre_6_passivity <=> $this->enemyJungler->pre_6_activity);
+                $vsEnemyJungleActivityMultiplier += 0.5 * ($jungler->pre_6_activity <=> $this->enemyJungler->pre_6_predatory);
+                $vsEnemyJunglePredatoryMultiplier += 0.5 * ($jungler->pre_6_predatory <=> $this->enemyJungler->pre_6_passivity);
             }
 
-            $alliesGankabilityMultiplier = 0.5 + ($allyGankabilityMultiplier / count($allyLaners));
-
-
-            foreach ($enemyLaners as $enemyLaner)
+            //todo: something is off about this calculation..
+            //todo: divide by zero error is possible when not entering in any allies/enemies
+            foreach ($allies as $ally)
             {
-                $enemyGankabilityMultiplier = ($enemyLaner->pre_6_gankability ?? 2) / 4;
+                $allyGankabilityTotal += $ally->pre_6_gankability ?? 2;
             }
 
-            $enemiesGankabilityMultiplier = 0.5 + ($enemyGankabilityMultiplier / count($enemyLaners));
+            $alliesGankabilityMultiplier = 0.5 + ($allyGankabilityTotal / (count($allies) * 4));
 
-            $passivityScore = $jungler->pre_6_passivity;
-            $activityScore = $jungler->pre_6_activity * $enemiesGankabilityMultiplier;
-            $predatoryScore = $jungler->pre_6_predatory * $alliesGankabilityMultiplier;
+            foreach ($enemies as $enemy)
+            {
+                $enemyGankabilityTotal += $enemy->pre_6_gankability ?? 2;
+            }
+
+            $enemiesGankabilityMultiplier = 0.5 + ($enemyGankabilityTotal / (count($enemies) * 4));
+
+            $passivityScore = ($jungler->pre_6_passivity * $vsEnemyJunglePassivityMultiplier);
+            $activityScore = ($jungler->pre_6_activity * $vsEnemyJungleActivityMultiplier) * $enemiesGankabilityMultiplier;
+            $predatoryScore = ($jungler->pre_6_predatory * $vsEnemyJunglePredatoryMultiplier) * $alliesGankabilityMultiplier;
 
             $pickScore = $passivityScore + $activityScore + $predatoryScore;
 
             $scoreListEntry = [
                 'score' => $pickScore,
-                'name' => $jungler->name
+                'name' => $jungler->name,
+                'passivityScore' => $passivityScore . '(' . $jungler->pre_6_passivity . '*' . $vsEnemyJunglePassivityMultiplier. ')',
+                'activityScore' => $activityScore .  '(' . $jungler->pre_6_activity . '*' . $vsEnemyJungleActivityMultiplier . '*' . $enemiesGankabilityMultiplier . ')',
+                'predatoryScore' => $predatoryScore .  '(' . $jungler->pre_6_predatory . '*' . $vsEnemyJunglePredatoryMultiplier . '*' . $alliesGankabilityMultiplier . ')'
             ];
 
             $scoreList[] = $scoreListEntry;
@@ -102,15 +127,3 @@ class ResultController extends Controller
         return $scoreList;
     }
 }
-
-//            $pickSide = in_array($order, self::BLUESIDE) ? 'blue' : 'red';
-
-//            if ($pick == 'me') {
-//                $this->playerSide = $pickSide;
-//                break;
-//            }
-
-//          $pick = (int) $pick;
-
-//            todo: this shizzle
-//            if ($this->playerSide == $pickSide);
