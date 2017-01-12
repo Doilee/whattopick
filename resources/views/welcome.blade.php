@@ -93,7 +93,6 @@
                                         <label for="ally-{{ $i }}"><strong>Ally</strong> pick number <b>{{ $i }}</b>:</label>
                                         <select name="ally-{{ $i }}">
                                             <option value="" selected></option>
-                                            <option value="me">Me</option>
                                             @foreach($champions as $champion)
                                                 <option value="{{ $champion->id }}">{{ $champion->name }}</option>
                                             @endforeach
@@ -107,7 +106,6 @@
                                         <label for="enemy-{{ $i }}"><strong>Enemy</strong> pick number <b>{{ $i }}</b>:</label>
                                         <select name="enemy-{{ $i }}">
                                             <option value="" selected></option>
-                                            <option value="me">Me</option>
                                             @foreach($champions as $champion)
                                                 <option value="{{ $champion->id }}">{{ $champion->name }}</option>
                                             @endforeach
