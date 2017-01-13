@@ -16,8 +16,9 @@ class Jungler extends Model
         'predatory' => 1
     ];
 
-    public function passivityScore()
-    {
-
-    }
+    public $scores = [
+        'passivity' => null,
+        'activity' => null,
+        'predatory' => null
+    ];
 }

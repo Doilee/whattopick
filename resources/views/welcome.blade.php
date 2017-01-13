@@ -5,7 +5,7 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title>Laravel</title>
+        <title>What To Pick</title>
 
         <!-- Fonts -->
         <link href="https://fonts.googleapis.com/css?family=Raleway:100,600" rel="stylesheet" type="text/css">
@@ -68,7 +68,7 @@
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     </head>
     <body>
-        <div class="flex-center position-ref full-height">
+        <div class="position-ref full-height">
             @if (Route::has('login'))
                 <div class="top-right links">
                     @if (Auth::check())
@@ -79,7 +79,6 @@
                     @endif
                 </div>
             @endif
-
             <div class="content">
                 <div class="title m-b-md">
                     What To Pick?
@@ -87,6 +86,7 @@
                 <div class="container">
                     <div class="row">
                         <form method="POST" action="{{ url('/result') }}">
+                            {{ csrf_field() }}
                             <div class="col-md-6">
                                 @for($i = 1; $i <= 5; $i++)
                                     <div class="form-group">
@@ -110,7 +110,7 @@
                                                 <option value="{{ $champion->id }}">{{ $champion->name }}</option>
                                             @endforeach
                                         </select>
-                                        <div class="radio">
+                                        <div style="display:inline-block">
                                             <label><input type="radio" name="jungler" value="{{ $i }}">Jungler?</label>
                                         </div>
                                     </div>
@@ -119,6 +119,9 @@
                             <button type="submit" class="btn btn-success">Submit</button>
                         </form>
                     </div>
+                </div>
+                <div>
+                    @yield('result')
                 </div>
             </div>
         </div>

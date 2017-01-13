@@ -56,7 +56,8 @@ class ResultController extends Controller
         $scoreList = $this->calculation($allies, $enemies);
 
         return view('result')
-            ->with('scoreList', $scoreList);
+            ->with('scoreList', $scoreList)
+            ->with('champions', Champion::all()->sortBy('name'));
     }
 
     /**
@@ -74,19 +75,14 @@ class ResultController extends Controller
             $allyGankabilityTotal = 0;
             $enemyGankabilityTotal = 0;
 
-            //todo: this calculation should be fine, but test it
             if (!empty($this->enemyJungler))
             {
-                // activity beats passivity
-                // passivity beats predatory
-                // predatory beats activity
-                $jungler->vsEnemyJungleMultipliers['passivity'] += 0.5 * ($jungler->pre_6_passivity <=> $this->enemyJungler->pre_6_activity);
-                $jungler->vsEnemyJungleMultipliers['activity'] += 0.5 * ($jungler->pre_6_activity <=> $this->enemyJungler->pre_6_predatory);
-                $jungler->vsEnemyJungleMultipliers['predatory'] += 0.5 * ($jungler->pre_6_predatory <=> $this->enemyJungler->pre_6_passivity);
+                // activity > passivity | passivity > predatory | predatory > activity
+                $jungler->vsEnemyJungleMultipliers['passivity'] += 0.25 * ($jungler->pre_6_passivity <=> $this->enemyJungler->pre_6_activity);
+                $jungler->vsEnemyJungleMultipliers['activity'] += 0.25 * ($jungler->pre_6_activity <=> $this->enemyJungler->pre_6_predatory);
+                $jungler->vsEnemyJungleMultipliers['predatory'] += 0.25 * ($jungler->pre_6_predatory <=> $this->enemyJungler->pre_6_passivity);
             }
 
-            //todo: something is off about this calculation..
-            //todo: divide by zero error is possible when not entering in any allies/enemies
             $allies->each(function($ally) use (&$allyGankabilityTotal)
             {
                 $allyGankabilityTotal += $ally->pre_6_gankability ?? 2;
@@ -101,18 +97,23 @@ class ResultController extends Controller
 
             $enemiesGankabilityMultiplier = 0.5 + ($enemyGankabilityTotal / (count($enemies) * 4));
 
-            $passivityScore = ($jungler->pre_6_passivity * $jungler->vsEnemyJungleMultipliers['passivity']);
-            $activityScore = ($jungler->pre_6_activity * $jungler->vsEnemyJungleMultipliers['activity']) * $enemiesGankabilityMultiplier;
-            $predatoryScore = ($jungler->pre_6_predatory * $jungler->vsEnemyJungleMultipliers['predatory']) * $alliesGankabilityMultiplier;
+            $scores = [
+                'passive' => ($jungler->pre_6_passivity * $jungler->vsEnemyJungleMultipliers['passivity']),
+                'active' => ($jungler->pre_6_activity * $jungler->vsEnemyJungleMultipliers['activity']) * $enemiesGankabilityMultiplier,
+                'aggressive' => ($jungler->pre_6_predatory * $jungler->vsEnemyJungleMultipliers['predatory']) * $alliesGankabilityMultiplier
+            ];
 
-            $pickScore = $passivityScore + $activityScore + $predatoryScore;
+            $pickScore = array_sum($scores);
+
+            $advice = array_keys($scores, max($scores));
 
             $scoreListEntry = [
-                'score' => $pickScore,
                 'name' => $jungler->name,
-                'passivityScore' => $passivityScore . '(' . $jungler->pre_6_passivity . '*' . $jungler->vsEnemyJungleMultipliers['passivity']. ')',
-                'activityScore' => $activityScore .  '(' . $jungler->pre_6_activity . '*' . $jungler->vsEnemyJungleMultipliers['activity'] . '*' . $enemiesGankabilityMultiplier . ')',
-                'predatoryScore' => $predatoryScore .  '(' . $jungler->pre_6_predatory . '*' . $jungler->vsEnemyJungleMultipliers['predatory'] . '*' . $alliesGankabilityMultiplier . ')'
+                'score' => $pickScore,
+                'passivityScore' => $scores['passive'] . '(' . $jungler->pre_6_passivity . '*' . $jungler->vsEnemyJungleMultipliers['passivity']. ')',
+                'activityScore' => $scores['active'] .  '(' . $jungler->pre_6_activity . '*' . $jungler->vsEnemyJungleMultipliers['activity'] . '*' . $enemiesGankabilityMultiplier . ')',
+                'predatoryScore' => $scores['aggressive'] .  '(' . $jungler->pre_6_predatory . '*' . $jungler->vsEnemyJungleMultipliers['predatory'] . '*' . $alliesGankabilityMultiplier . ')',
+                'advice' => 'Play ' . join(' and/or ', $advice)
             ];
 
             $scoreList->push($scoreListEntry);
