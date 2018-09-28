@@ -85,6 +85,13 @@
                 </div>
                 <div class="container">
                     <div class="row">
+                        @if($errors->any())
+                            <div class="col-md-12">
+                                <pre>
+                                    {{ $errors->first() }}
+                                </pre>
+                            </div>
+                        @endif
                         <form method="POST" action="{{ url('/result') }}">
                             {{ csrf_field() }}
                             <div class="col-md-6">

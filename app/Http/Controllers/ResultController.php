@@ -33,8 +33,16 @@ class ResultController extends Controller
      */
     public function index(Request $request)
     {
-
         $this->enemyJungler = Jungler::where('champion_id', $request->get('enemy-' . $request->get('jungler')))->first();
+
+
+        // todo: make error messages work
+        if (empty($this->enemyJungler))
+        {
+            return redirect()->back()->withErrors([
+                'main' => 'Please choose an enemy jungler.'
+            ]);
+        }
 
         $picks = collect($request->all())->reject(function ($pick){
             return empty($pick);

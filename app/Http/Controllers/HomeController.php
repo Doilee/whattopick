@@ -4,15 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Champion;
 use Illuminate\Http\Request;
-use App\Http\Controllers\ApiController;
-use Collective\Html\HtmlFacade;
 
 class HomeController extends Controller
 {
-
-    public function index()
+    public function index(Request $request)
     {
         return view('welcome')
-            ->with('champions', Champion::all()->sortBy('name'));
+            ->with('champions', Champion::all()->sortBy('name'))
+            ->withErrors($request->get('main'));
     }
 }
